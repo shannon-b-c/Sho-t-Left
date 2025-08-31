@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sho\'t Left</string>
+    <string name = "my_map_api_key">AIzaSyAbPm8G3zn7DSRRqgXPvgz4va4NIWPQd3U</string>
 </resources>
