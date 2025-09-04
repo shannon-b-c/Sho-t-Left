@@ -32,12 +32,16 @@ android {
 }
 
 dependencies {
+    implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    implementation(libs.okhttp)
+    //implementation(libs.okhttp)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    implementation(libs.gms.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
