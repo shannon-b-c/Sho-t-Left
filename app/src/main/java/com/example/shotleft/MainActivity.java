@@ -35,8 +35,11 @@ import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -56,15 +59,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
 
+
+
         //adding Ranks
 
 
     }
     public void addRanks(){
+        //CLEANED THE REQUEST UP AND PASSING CURRENT LOCATION TO THE DB
+        String url = "https://umzxebhgucvpariulruy.supabase.co/rest/v1/rpc/nearest_rank";
+        String anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtenhlYmhndWN2cGFyaXVscnV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1ODI4MjYsImV4cCI6MjA3MjE1ODgyNn0.o3ABCnBftZln1CmXg3Q0ewm1kdInEdTJ1PLA9oTTUR4";
+
+        double current_lat = -26.2041;
+        double current_lon = 28.0473;
+
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        String json = "{ \"lat\": " + current_lat + ", \"lon\": " + current_lon + " }";
+        RequestBody reqBody = RequestBody.create(json, JSON);
+
         Request request = new Request.Builder()
-                .url("https://umzxebhgucvpariulruy.supabase.co/rest/v1/ranks")
-                .addHeader("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtenhlYmhndWN2cGFyaXVscnV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1ODI4MjYsImV4cCI6MjA3MjE1ODgyNn0.o3ABCnBftZln1CmXg3Q0ewm1kdInEdTJ1PLA9oTTUR4")
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtenhlYmhndWN2cGFyaXVscnV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1ODI4MjYsImV4cCI6MjA3MjE1ODgyNn0.o3ABCnBftZln1CmXg3Q0ewm1kdInEdTJ1PLA9oTTUR4")
+                .url(url)
+                .post(reqBody)
+                .addHeader("apikey", anon_key)
+                .addHeader("Authorization", "Bearer "+ anon_key)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -84,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         @Override
                         public void run() {
                             try {
+                                Log.d("Supabase", responseData);
+                                //just to see the query results in the logcat
                                 processJSON(responseData);
                             } catch (JSONException e) {
                                 e.printStackTrace();
