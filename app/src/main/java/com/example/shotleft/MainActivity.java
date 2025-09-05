@@ -1,14 +1,18 @@
 package com.example.shotleft;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 
 
@@ -50,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     FusedLocationProviderClient fusedLocationProviderClient;
     OkHttpClient client = new OkHttpClient();
     private String responseData;
+    private String userLocationName;
+    private ArrayList<String> rankArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,9 +65,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
 
+        CardView searchBarButton= findViewById(R.id.searchBarButton);
+
+        searchBarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Convert user location to address
+                        String userLocationName = GeocodingUtils.getAddressFromLatLng(
+                                MainActivity.this,
+                                currentLocation.getLatitude(),
+                                currentLocation.getLongitude()
+                        );
+
+                        // Switch back to UI thread for navigation
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Intent intent = new Intent(MainActivity.this, Search_Activity.class);
+                                intent.putExtra("Current_Location_lat", currentLocation.getLatitude());
+                                intent.putExtra("Current_Location_lng", currentLocation.getLongitude());
+                                intent.putExtra("Current_Location_Name", userLocationName);
+                                intent.putExtra("Ranks", rankArray);
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                }).start(); // <-- THIS WAS MISSING
+            }
+        });
 
 
-        //adding Ranks
+
 
 
     }
@@ -172,7 +209,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         addRanks();
 
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults, int deviceId) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId);
@@ -184,7 +220,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
-
     private void processJSON(String json) throws JSONException {
         ArrayList<String> rankArray = new ArrayList<>();
 
@@ -218,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         ArrayList<LatLng> nearestRanks = getNearestRanks(currentLocation, locations);
         adjustCameraToNearestRanks(currentLocation, nearestRanks);
     }
-
     private void adjustCameraToNearestRanks(Location currentLocation, ArrayList<LatLng> nearestRanks){
         if (myMap == null || nearestRanks.isEmpty()) return;
 
@@ -231,7 +265,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         int padding = 150; //pixels
         myMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding));
     }
-
     private ArrayList<LatLng> getNearestRanks(Location currentLocation, ArrayList<LatLng> allRanks){
         if (currentLocation == null) {
             Log.e("getNearestRanks", "User location is null, skipping nearest rank calculation");
@@ -246,11 +279,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return nearest;
     }
-
     private double distanceBetween(Location currentLocation, LatLng rank){
         Location loc = new Location("");
         loc.setLatitude(rank.latitude);
         loc.setLongitude(rank.longitude);
         return currentLocation.distanceTo(loc);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            String startName = data.getStringExtra("START_NAME");
+            double startLat = data.getDoubleExtra("START_LAT", 0.0);
+            double startLng = data.getDoubleExtra("START_LNG", 0.0);
+
+            String destName = data.getStringExtra("DEST_NAME");
+            double destLat = data.getDoubleExtra("DEST_LAT", 0.0);
+            double destLng = data.getDoubleExtra("DEST_LNG", 0.0);
+        }
     }
 }
