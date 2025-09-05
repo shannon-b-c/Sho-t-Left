@@ -1,16 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <fragment
         android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        app:behavior_peekHeight="100dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@android:color/darker_gray"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/rank_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rank Name"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/rank_distance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Distance: "
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/routes_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Available Routes:"
+            android:textSize="16sp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/routes_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/close_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Close"
+            android:layout_gravity="end"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
