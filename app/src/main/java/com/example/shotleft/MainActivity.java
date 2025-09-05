@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +18,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
+import android.widget.ImageView;
 
+import android.os.Handler;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -81,7 +85,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final ImageView logoImageView = findViewById(R.id.logo_image_view);
 
+        // Set initial state (off-screen to the left)
+        logoImageView.setTranslationX(-1000f);
+
+        // Use a handler to delay the animation slightly
+        new Handler().postDelayed(() -> {
+            logoImageView.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(800)
+                    .start();
+        }, 100);
         Log.d(TAG, "onCreate: Starting initialization");
         CardView searchBarButton= findViewById(R.id.searchBarButton);
 
