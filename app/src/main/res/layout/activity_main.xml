@@ -72,9 +72,10 @@
             android:layout_marginTop="16dp" />
 
     </LinearLayout>
+
     <androidx.cardview.widget.CardView
         android:id="@+id/searchBarButton"
-        android:layout_width="0dp"
+        android:layout_width="348dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
@@ -91,16 +92,16 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_search"
                 android:contentDescription="Search Icon"
+                android:src="@drawable/ic_search"
                 app:tint="#808080" />
 
             <TextView
@@ -108,8 +109,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:text="Uyaphi?"
-                android:textSize="16sp"
-                android:textColor="#A0A0A0" />
+                android:textColor="#A0A0A0"
+                android:textSize="16sp" />
 
         </LinearLayout>
 
