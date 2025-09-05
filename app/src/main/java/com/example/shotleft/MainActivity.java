@@ -655,6 +655,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (currentLocation == null) {
             Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show();
             return;
+        }else{
+            Toast.makeText(this, "Got optimal routes", Toast.LENGTH_SHORT).show();
         }
 
         OkHttpClient client = new OkHttpClient();
