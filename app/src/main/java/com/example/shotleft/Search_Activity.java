@@ -2,6 +2,7 @@ package com.example.shotleft;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.common.api.Status;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
@@ -22,15 +24,22 @@ public class Search_Activity extends AppCompatActivity {
     private double destinationLat, destinationLng;
     private double startLat, startLng;
     private String startName, destinationName;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        confirmButton = findViewById(R.id.confirmButton);
         if(!Places.isInitialized()){
             Places.initialize(getApplicationContext(), "AIzaSyAbPm8G3zn7DSRRqgXPvgz4va4NIWPQd3U");
 
         }
+        PlacesClient placesClient = Places.createClient(this);
+
 
         AutocompleteSupportFragment startLocationAutocomplete = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.start_location_autocomplete);
@@ -65,9 +74,11 @@ public class Search_Activity extends AppCompatActivity {
                 }
             }
 
+
             @Override
             public void onError(@NonNull Status status) {
-                Toast.makeText(Search_Activity.this, "Error selecting start location: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(Search_Activity.this, "Error selecting start location: " + status.getStatusMessage(), Toast.LENGTH_LONG).show();
+                Log.d("Search activity: ", status.getStatusMessage());
             }
         });
 
@@ -84,14 +95,14 @@ public class Search_Activity extends AppCompatActivity {
 
             @Override
             public void onError(@NonNull Status status) {
-                Toast.makeText(Search_Activity.this, "Error selecting destination: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(Search_Activity.this, "Error selecting destination: " + status.getStatusMessage(), Toast.LENGTH_LONG).show();
             }
         });
 
         //Confirm button sends results back to MainActivity
         confirmButton.setOnClickListener(v -> {
             if (destinationName == null || destinationLat == 0.0 || destinationLng == 0.0) {
-                Toast.makeText(Search_Activity.this, "Please select a destination", Toast.LENGTH_SHORT).show();
+                Toast.makeText(Search_Activity.this, "Please select a destination", Toast.LENGTH_LONG).show();
                 return;
             }
             Intent resultIntent = new Intent();
