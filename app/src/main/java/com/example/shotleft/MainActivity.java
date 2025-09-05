@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,6 +34,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -91,11 +93,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         logoImageView.setTranslationX(-1000f);
 
         // Use a handler to delay the animation slightly
+        // Use a handler to delay the animation slightly
         new Handler().postDelayed(() -> {
             logoImageView.animate()
                     .translationX(0f)
                     .alpha(1f)
                     .setDuration(800)
+                    .withEndAction(() -> {
+                        // After animation finishes, wait 1 second, then hide
+                        new Handler().postDelayed(() -> {
+                            logoImageView.animate()
+                                    .alpha(0f) // fade out
+                                    .setDuration(500)
+                                    .withEndAction(() -> logoImageView.setVisibility(View.GONE)) // completely hide
+                                    .start();
+                        }, 2500); // 1 second delay before hiding
+                    })
                     .start();
         }, 100);
         Log.d(TAG, "onCreate: Starting initialization");
@@ -624,7 +637,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+        if (requestCode == 100 || (resultCode == RESULT_OK && data != null)) {
             String startName = data.getStringExtra("START_NAME");
             double startLat = data.getDoubleExtra("START_LAT", 0.0);
             double startLng = data.getDoubleExtra("START_LNG", 0.0);
@@ -632,6 +645,118 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String destName = data.getStringExtra("DEST_NAME");
             double destLat = data.getDoubleExtra("DEST_LAT", 0.0);
             double destLng = data.getDoubleExtra("DEST_LNG", 0.0);
+            fetchOptimalRoutes(startLat, startLng, destLat,destLng);
         }
     }
+
+    private void fetchOptimalRoutes(double startLat, double startLng, double destLat, double destLng) {
+        Log.d(TAG, "fetchOptimalRoutes: Start(" + startLat + ", " + startLng +
+                ") -> Dest(" + destLat + ", " + destLng + ")");
+        if (currentLocation == null) {
+            Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        OkHttpClient client = new OkHttpClient();
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("start_lon", startLng);
+            jsonBody.put("start_lat", startLat);
+            // Example destination: Replace with user input or selection
+            jsonBody.put("dest_lon", destLng);
+            jsonBody.put("dest_lat", destLat);
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON error: " + e.getMessage());
+        }
+
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        RequestBody body = RequestBody.create(jsonBody.toString(), JSON);
+        String anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtenhlYmhndWN2cGFyaXVscnV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1ODI4MjYsImV4cCI6MjA3MjE1ODgyNn0.o3ABCnBftZln1CmXg3Q0ewm1kdInEdTJ1PLA9oTTUR4";
+
+        Request request = new Request.Builder()
+                .url("https://umzxebhgucvpariulruy.supabase.co/rest/v1/rpc/optimal_routes")
+                .post(body)
+                .addHeader("apikey", anon_key)
+                .addHeader("Authorization", "Bearer "+ anon_key)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Optimal routes request failed: " + e.getMessage());
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Failed to fetch routes", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.e(TAG, "Server error: " + response.code());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Server error: " + response.code(), Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                final String responseData = response.body().string();
+                runOnUiThread(() -> {
+                    try {
+                        displayRoutes(responseData);
+                        Log.d("Supabase", responseData);
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "JSON parsing error: " + e.getMessage());
+                        Toast.makeText(MainActivity.this, "Error parsing routes", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+    }
+
+    private void displayRoutes(String json) throws JSONException {
+        // Clear previous
+        for (Polyline line : activePolylines) line.remove();
+        activePolylines.clear();
+        routesContainer.removeAllViews();
+
+        JSONArray arr = new JSONArray(json);
+        if (arr.length() == 0) {
+            routesContainer.setVisibility(View.GONE);
+            return;
+        }
+        routesContainer.setVisibility(View.VISIBLE);
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject route = arr.getJSONObject(i);
+
+            String startName = route.optString("start_rank_name", "Unknown start");
+            String destName  = route.optString("dest_rank_name", "Unknown end");
+            double fare      = route.optDouble("total_fare", Double.NaN);
+            double startDist = route.optDouble("start_distance_m", Double.NaN) / 1000.0;
+            double destDist  = route.optDouble("dest_distance_m", Double.NaN) / 1000.0;
+
+            View routeView = inflater.inflate(R.layout.route_item_layout, routesContainer, false);
+            TextView title = routeView.findViewById(R.id.item_route_title);
+            TextView fareTv = routeView.findViewById(R.id.item_route_fare);
+            TextView distTv = routeView.findViewById(R.id.item_route_distance);
+
+            title.setText(startName + " → " + destName);
+            if (!Double.isNaN(fare)) fareTv.setText(String.format("Fare: R%.2f", fare));
+            if (!Double.isNaN(startDist) && !Double.isNaN(destDist))
+                distTv.setText(String.format("Start dist: %.2f km | Dest dist: %.2f km", startDist, destDist));
+
+            routesContainer.addView(routeView);
+
+            if (route.has("route_geom")) {
+                try {
+                    JSONObject geom = route.getJSONObject("route_geom");
+                    if ("LineString".equalsIgnoreCase(geom.optString("type"))) {
+                        JSONArray coords = geom.getJSONArray("coordinates");
+                        drawLineStringOnMap(coords);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
 }

@@ -16,20 +16,20 @@
         android:id="@+id/logo_image_view"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:src="@drawable/ic_logo"
+        android:src="@drawable/ic_logo_bg"
         android:scaleType="fitCenter"
         android:layout_gravity="center" />
-
+<!--
     <TextView
         android:id="@+id/loading_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Loading..."
+        android:text="Sho't Left"
         android:textSize="18sp"
         android:textColor="@color/black"
         android:layout_gravity="center|bottom"
         android:layout_marginBottom="50dp" />
-
+-->
     <LinearLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
